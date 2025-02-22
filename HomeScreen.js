@@ -18,6 +18,13 @@ const HomeScreen = ({ navigation }) => {
   const [coffeeData, setCoffeeData] = useState([]);
   const [beansData, setBeansData] = useState([]);
   const [searchText, setSearchText] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const categories = useMemo(() => {
+    const allNames = ['All', ...coffeeData.map(item => item.name)];
+    // Lọc bỏ các tên trùng lặp
+    return [...new Set(allNames)];
+  }, [coffeeData]);
 
   useEffect(() => {
     const getData = async () => {
@@ -85,14 +92,19 @@ const HomeScreen = ({ navigation }) => {
 
     getData();
   }, []);
-  
-    
+
+
   // Lọc coffee theo searchText
   const filteredCoffee = useMemo(() => {
+    if (selectedCategory === 'All') {
+      return coffeeData.filter((item) =>
+        item.name.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
     return coffeeData.filter((item) =>
-      item.name.toLowerCase().includes(searchText.toLowerCase())
+      item.name.toLowerCase().includes(selectedCategory.toLowerCase())
     );
-  }, [coffeeData, searchText]);
+  }, [coffeeData, searchText, selectedCategory]);
 
   // Thêm hàm addToCart
   const addToCart = async (item, size = 'Medium') => { // size mặc định cho coffee
@@ -163,6 +175,33 @@ const HomeScreen = ({ navigation }) => {
         />
       </View>
 
+      {/* Categories */}
+      <View style={styles.categoryContainer}>
+        <ScrollView 
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryScrollContent}
+        >
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category}
+              style={[
+                styles.categoryButton,
+                selectedCategory === category && styles.selectedCategory
+              ]}
+              onPress={() => setSelectedCategory(category)}
+            >
+              <Text style={[
+                styles.categoryText,
+                selectedCategory === category && styles.selectedCategoryText
+              ]}>
+                {category}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
       {/* Danh sách Coffee */}
       <Text style={styles.sectionTitle}>Coffee</Text>
       <FlatList
@@ -181,10 +220,10 @@ const HomeScreen = ({ navigation }) => {
               };
               console.log("Navigating to CoffeeDetails with:", itemWithPrice);
               navigation.navigate("CoffeeDetailsScreen", { item: itemWithPrice });
-            }}            
+            }}
           >
-            <Image 
-              source={{ uri: item.image }} 
+            <Image
+              source={{ uri: item.image }}
               style={styles.image}
               onError={(e) => console.log('Coffee image error:', e.nativeEvent.error)}
             />
@@ -194,7 +233,7 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.price}>
                 ${item.price ? item.price.toFixed(2) : '5.99'}
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => addToCart(item, 'Medium')}
               >
@@ -205,7 +244,7 @@ const HomeScreen = ({ navigation }) => {
         )}
       />
 
-      {/* Danh sách Coffee Beans */}
+      {/* Danh sách Beans */}
       <Text style={styles.sectionTitle}>Coffee Beans</Text>
       <FlatList
         data={beansData}
@@ -225,8 +264,8 @@ const HomeScreen = ({ navigation }) => {
               navigation.navigate("BeanDetailsScreen", { item: itemWithPrice });
             }}
           >
-            <Image 
-              source={{ uri: item.image }} 
+            <Image
+              source={{ uri: item.image }}
               style={styles.image}
               onError={(e) => console.log('Beans image error:', e.nativeEvent.error)}
             />
@@ -236,7 +275,7 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.price}>
                 ${item.price ? item.price.toFixed(2) : '15.99'}
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => addToCart(item, '250g')}
               >
@@ -251,16 +290,16 @@ const HomeScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#121212", 
+  container: {
+    flex: 1,
+    backgroundColor: "#121212",
     padding: 20,
     paddingTop: 60,
   },
-  title: { 
+  title: {
     fontSize: 24,
-    color: "#fff", 
-    fontWeight: "bold", 
+    color: "#fff",
+    fontWeight: "bold",
     marginBottom: 10,
   },
 
@@ -330,6 +369,31 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
+  },
+
+  categoryContainer: {
+    marginBottom: 20,
+  },
+  categoryScrollContent: {
+    paddingRight: 20, // Thêm padding để button cuối không sát lề
+  },
+  categoryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginRight: 10,
+    borderRadius: 20,
+    backgroundColor: '#1E1E1E',
+  },
+  selectedCategory: {
+    backgroundColor: '#FF8C00',
+  },
+  categoryText: {
+    color: '#888',
+    fontSize: 16,
+  },
+  selectedCategoryText: {
+    color: '#FFF',
+    fontWeight: 'bold',
   },
 });
 
